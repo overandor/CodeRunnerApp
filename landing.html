@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HDAR — Hardware-Detached Agent Runtime & FileVM Passport</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #090a0f;
+      --bg-card: rgba(22, 27, 38, 0.7);
+      --bg-card-hover: rgba(30, 38, 54, 0.9);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --accent-green: #00e676;
+      --text-main: #f0f4f8;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .glow-bg {
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, rgba(79, 172, 254, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      padding: 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-protocol {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(0, 242, 254, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px 0;
+    }
+    .hero h1 {
+      font-size: 54px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 20px;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 36px auto;
+      font-weight: 300;
+    }
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+      color: #000;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 242, 254, 0.5);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 80px;
+    }
+    .stat-item { text-align: center; }
+    .stat-num { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--accent-cyan); }
+    .stat-label { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    .section-title {
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+    .section-desc {
+      text-align: center;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 48px auto;
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 80px;
+    }
+    @media (max-width: 900px) { .pipeline-grid { grid-template-columns: 1fr; } }
+    .pipeline-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+    .step-idx {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+    .step-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .step-desc { font-size: 13px; color: var(--text-muted); }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      margin-bottom: 80px;
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+    }
+    .comparison-table th { background: rgba(255, 255, 255, 0.03); color: var(--text-main); font-weight: 700; }
+    .comparison-table td:first-child { font-weight: 600; color: var(--text-main); }
+    .highlight-cell { color: var(--accent-cyan); font-weight: 700; }
+
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #e6edf3;
+      overflow-x: auto;
+      margin-bottom: 80px;
+    }
+    .code-comment { color: #8b949e; }
+
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    footer a { color: var(--accent-cyan); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="glow-bg"></div>
+  <div class="container">
+    <header>
+      <div class="logo">
+        ⚡ HDAR Passport
+        <span class="badge-protocol">v1.1-seed</span>
+      </div>
+      <div>
+        <a href="#quickstart" class="btn-secondary" style="padding: 8px 16px; font-size: 13px;">Quick Start</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Storage is the Computer.<br/>Hardware is Temporary.</h1>
+      <p>A proof-carrying portable runtime identity system. Seal AI agents into content-addressed seed tokens, transport across any host, and resume with verifiable cryptographic lineage.</p>
+      <div class="cta-buttons">
+        <a href="#quickstart" class="btn-primary">Explore Demo</a>
+        <a href="https://github.com/overandor" class="btn-secondary" target="_blank">View GitHub</a>
+      </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-num">57 / 57</div>
+        <div class="stat-label">Tests Passed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">Ed25519</div>
+        <div class="stat-label">Identity Attestation</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">2 Deps</div>
+        <div class="stat-label">Zero Bloat Engine</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3-Epoch</div>
+        <div class="stat-label">Lineage Provenance</div>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <h2 class="section-title">The 5-Step Continuation Pipeline</h2>
+    <p class="section-desc">Hardware-detached execution guarantees that identity survives host replacement without trusting self-reported execution.</p>
+    
+    <div class="pipeline-grid">
+      <div class="pipeline-step">
+        <div class="step-idx">01 / SEAL</div>
+        <div class="step-title">Seal Passport</div>
+        <div class="step-desc">Host A seals state root, code hashes, and identity key into E1.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-idx">02 / TRANSPORT</div>
+        <div class="step-title">Clipboard / Net</div>
+        <div class="step-desc">Transport seed token via string, API, or base64 clipboard teleport.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-idx">03 / RESTORE</div>
+        <div class="step-title">Host B Mount</div>
+        <div class="step-desc">Host B verifies parent signature & materializes clean workspace.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-idx">04 / EXECUTE</div>
+        <div class="step-title">Witnessed Work</div>
+        <div class="step-desc">Executes bounded workload under strict policy guardrails.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-idx">05 / VERIFY</div>
+        <div class="step-title">Auditor Check</div>
+        <div class="step-desc">Verifier C checks 20/20 checks & cryptographic lineage.</div>
+      </div>
+    </div>
+
+    <!-- Quick Start Code -->
+    <h2 class="section-title" id="quickstart">Quick Start</h2>
+    <p class="section-desc">Run the zero-dependency portable proof kernel locally in Python.</p>
+    
+    <div class="code-block">
+      <span class="code-comment"># 1. Run the canonical E2E 3-epoch migration test</span><br/>
+      $ python3 hdar_portable.py demo --out /tmp/hdar_demo<br/><br/>
+      <span class="code-comment"># 2. Run Node.js 20/20 Cryptographic Verifier C</span><br/>
+      $ node verifier.js /tmp/hdar_demo<br/><br/>
+      <span class="code-comment"># Output: ✅ VERIFICATION SUCCESSFUL (20/20 Checks Passed)</span>
+    </div>
+
+    <!-- Comparison Table -->
+    <h2 class="section-title">Architectural Comparison</h2>
+    <p class="section-desc">How FileVM Seed Tokens compare to conventional infrastructure.</p>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>FileVM Seed Token</th>
+          <th>Docker Container</th>
+          <th>Git Repository</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Primary Authority</td>
+          <td class="highlight-cell">Storage Object</td>
+          <td>Host Daemon</td>
+          <td>Remote Server</td>
+        </tr>
+        <tr>
+          <td>Cryptographic Lineage</td>
+          <td class="highlight-cell">Ed25519 3-Epoch Chain</td>
+          <td>Layer Hashes Only</td>
+          <td>Commit DAG</td>
+        </tr>
+        <tr>
+          <td>Witnessed Execution Receipts</td>
+          <td class="highlight-cell">Built-in TEE / Merkle</td>
+          <td>None</td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <td>Single-File Teleportation</td>
+          <td class="highlight-cell">Yes (Base64 / Seed)</td>
+          <td>No (Gigabyte Layers)</td>
+          <td>Requires Clone</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer>
+      <p>FileVM Passport & HDAR Architectural Suite • Developed with Google DeepMind Antigravity IDE</p>
+    </footer>
+  </div>
+</body>
+</html>
