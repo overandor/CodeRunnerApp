@@ -1,0 +1,11 @@
+{
+  "name": "coderunner-app",
+  "version": "1.0.0",
+  "description": "HDAR Hardware-Detached Agent Runtime & Universal Code Execution Engine",
+  "author": {
+    "name": "overandor"
+  },
+  "homepage": "https://github.com/overandor/CodeRunnerApp",
+  "repository": "https://github.com/overandor/CodeRunnerApp",
+  "capabilities": ["code_execution", "hdar_attestation", "mcp_server", "acp_agent"]
+}

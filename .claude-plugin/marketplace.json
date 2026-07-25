@@ -1,0 +1,13 @@
+{
+  "name": "overandor-coderunner-marketplace",
+  "owner": "overandor",
+  "description": "CodeRunnerApp & HDAR Hardware-Detached Agent Runtime Plugin Marketplace",
+  "plugins": [
+    {
+      "name": "coderunner-app",
+      "description": "HDAR Hardware-Detached Agent Runtime & Universal Code Execution Engine",
+      "version": "1.0.0",
+      "path": "./"
+    }
+  ]
+}
